@@ -1,0 +1,8 @@
+*.lprof
+*.txt
+*.in
+*.out
+*.input
+*.output
+*.class
+*.pyc
