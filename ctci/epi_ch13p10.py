@@ -34,7 +34,7 @@ def solve(timetable, start_city, start_time, dest_city):
     # The cities we have visited (optimized) so far.
     visited = set()
     # Add the start_city and start_time.
-    soonest[start_city] = start_time
+    soonest[start_city] = start_time - HOUR
 
     while dest_city not in visited:
         # What is the city we can arrive into earliest, and which we have not
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         Flight(1000, 'C1', 'C2', 1400),
         Flight(2100, 'C1', 'C2', 0100),
         Flight(1430, 'C2', 'C4', 2030),
-        Flight(1230, 'C1', 'C3', 1630),
+        Flight(1230, 'C1', 'C3', 1430),
         Flight(1600, 'C3', 'C4', 1800),
     ]
     print solve(timetable, 'C1', 900, 'C4')
