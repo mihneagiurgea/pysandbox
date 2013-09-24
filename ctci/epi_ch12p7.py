@@ -42,6 +42,57 @@ def max_subarray_of_sum(A, K):
     # Decrease the start index by 1 to convert to original array.
     return (solution[0], solution[1] - 1, solution[2])
 
+def max_subarray_of_mean(A, K):
+    """Find the maximum-length subarray of mean <= K.
+
+    >>> A = [5, 7, -3, 2, 1, 3, 0, 9]
+    >>> max_subarray_of_mean(A, 6)
+    (8, 0, 3.0)
+    >>> max_subarray_of_mean(A, 2)
+    (6, 2, 2.0)
+    >>> max_subarray_of_mean(A, 0)
+    (3, 2, 0.0)
+    >>> max_subarray_of_mean(A, 1)
+    (5, 2, 0.6)
+    """
+    # Solution is in the form of (length, start, sum).
+    solution = (None, None, None)
+
+    # Build vector of prefix sums.
+    S = []
+    for a in A:
+        prefix = float(a)
+        if S:
+            prefix += S[-1]
+        S.append(prefix)
+
+    # Let S'[i] = S[i] + K * i
+    # Let V be all increasing (strict) elements from S', and Vpos their
+    # corresponding positions.
+    V = []
+    Vpos = []
+
+    for i in range(len(A)):
+        current_solution = (i + 1, 0, S[i] / (i + 1))
+        if current_solution[2] <= K:
+            solution = max(solution, current_solution)
+
+        # Find minimum j such that we can use A[j+1:i+1] as a solution.
+        # V[index] >= prefix_sum - K
+        index = bisect.bisect_left(V, S[i] - K * i)
+        if index < len(V):
+            j = Vpos[index]
+            current_solution = (i - j, j + 1, (S[i] - S[j]) / (i - j))
+            solution = max(solution, current_solution)
+
+        # Compute S'[i], and add it to V, if needed.
+        sp = S[i] + K * i
+        if not V or sp > V[-1]:
+            V.append(sp)
+            Vpos.append(i)
+
+    return solution
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
