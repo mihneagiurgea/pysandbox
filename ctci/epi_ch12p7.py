@@ -1,42 +1,47 @@
 import bisect
 
-def solve(A, K):
-    """Find the subarray of maximum length and sum <= K."""
+def max_subarray_of_sum(A, K):
+    """Find the maximum-length subarray of sum <= K.
+
+    >>> A = [5, 7, -3, 2, 1, 3, 0, 9]
+    >>> max_subarray_of_sum(A, 6)
+    (5, 2, 3)
+    >>> max_subarray_of_sum(A, 3)
+    (5, 2, 3)
+    >>> max_subarray_of_sum(A, 2)
+    (3, 2, 0)
+    >>> max_subarray_of_sum(A, 10)
+    (6, 1, 10)
+    """
     # Solution is in the form of (length, start, sum).
     solution = (None, None, None)
 
-    V = []
-    Vpos = []
+    # Insert a sentinel element at the beginning of A to simplify coding,
+    # without modifying the input array.
+    A = [0] + A
+    V = [0]
+    Vpos = [0]
 
     prefix_sum = 0
-    for i in range(len(A)):
+    for i in range(1, len(A)):
         prefix_sum += A[i]
 
-        # Can we use A[0:i+1] as a solution?
-        if prefix_sum <= K:
-            current_solution = (i+1, 0, prefix_sum)
+        # Find minimum j such that we can use A[j+1:i+1] as a solution.
+        # V[index] >= prefix_sum - K
+        index = bisect.bisect_left(V, prefix_sum - K)
+        if index < len(V):
+            j = Vpos[index]
+            current_solution = (i - j, j + 1, prefix_sum - V[index])
             solution = max(solution, current_solution)
-        else:
-            # Find minimum j such that we can use A[j+1:i+1] as a solution.
-            # V[index] >= prefix_sum - K
-            index = bisect.bisect_left(V, prefix_sum - K)
-            if index < len(V):
-                j = Vpos[index]
-                current_solution = (i - j, j + 1, prefix_sum - V[index])
-                solution = max(solution, current_solution)
 
         # Add current prefix to V.
-        if not V or prefix_sum > V[-1]:
+        if prefix_sum > V[-1]:
             V.append(prefix_sum)
             Vpos.append(i)
 
-    return solution
+    # Decrease the start index by 1 to convert to original array.
+    return (solution[0], solution[1] - 1, solution[2])
 
 if __name__ == '__main__':
-    V = [(0, -1), (5, 0), (12, 1), (16, 5)]
-
-    A = [5, 7, -3, 2, 1, 3, 0, 9]
-    sol = solve(A, 6)
-    print sol
-    (max_len, start, _) = sol
-    print A[start:start+max_len]
+    import doctest
+    doctest.testmod()
