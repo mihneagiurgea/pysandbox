@@ -10,6 +10,23 @@ class LinkedList(object):
         else:
             return '%r-->%r' % (self.value, self.tail)
 
+    @classmethod
+    def from_list(self, ls):
+        head = LinkedList(ls[0])
+        last = head
+        for i in range(1, len(ls)):
+            last.tail = LinkedList(ls[i])
+            last = last.tail
+        return head
+
+    def take(self, n):
+        """Return the n-th node from ll (0-indexed)."""
+        ls = self
+        while n:
+            ls = ls.tail
+            n -= 1
+        return ls
+
 def count(root, key):
     sol = 0
     while root:
@@ -31,6 +48,60 @@ def reverse(ll):
         last = ll
         ll = tail
     return last
+
+def reverse_some(ll, n):
+    """Reverse the first n nodes from ll. Return the new head and the node
+    right after the new head (n+1-th)."""
+    prev = ll
+    node = ll.tail
+    prev.tail = None
+    n -= 1
+    while node and n > 0:
+        next = node.tail
+        node.tail = prev
+        prev = node
+        node = next
+        n -= 1
+    return prev, node
+
+
+def reverse2(ll, m, n):
+    """Reverse from position m to n.
+    >>> R = range(1, 6)
+    >>> LinkedList.from_list(R)
+    1-->2-->3-->4-->5-/->
+    >>> reverse2(LinkedList.from_list(R), 2, 4)
+    1-->4-->3-->2-->5-/->
+    >>> reverse2(LinkedList.from_list(R), 2, 5)
+    1-->5-->4-->3-->2-/->
+    >>> reverse2(LinkedList.from_list(R), 1, 4)
+    4-->3-->2-->1-->5-/->
+    >>> reverse2(LinkedList.from_list(R), 1, 5)
+    5-->4-->3-->2-->1-/->
+    """
+    # Index from 0
+    m -= 1
+    n -= 1
+    # Validate m, n
+    if not n >= m >= 0:
+        raise ValueError('Invalid arguments %d,%d' % (m, n))
+
+    # a (m-1) -> b (m) -> ... -> c (n) -> d (n+1)
+    if m == 0:
+        a = None
+        b = ll
+    else:
+        a = ll.take(m-1)
+        b = a.tail
+
+    c, d = reverse_some(b, n-m+1)
+    if a is not None:
+        a.tail = c
+    b.tail = d
+    if m == 0:
+        return c
+    else:
+        return ll
 
 def swap_nodes_in_pair(ll):
     curr = ll
@@ -274,7 +345,7 @@ def subsets2(S):
     return generate_all(S)
 
 if __name__ == '__main__':
-    print subsets2([2, 1, 2])
+    # print subsets2([2, 1, 2])
     # print permutation_sequence(3, 5)
     # main()
     import doctest
