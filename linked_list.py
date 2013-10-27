@@ -272,6 +272,27 @@ class LinkedList(object):
         """
         self.push(ll.pop())
 
+    def reverse(self):
+        """
+        >>> LinkedList(1).reverse()
+        1-/->
+        >>> LinkedList(1, 2, 3).reverse()
+        3-->2-->1-/->
+        """
+        if self.head is None:
+            return self
+        prev = self.head
+        node = self.head.tail
+        self.head.tail = None
+        while node:
+            # prev -> node -> node.tail
+            node_tail = node.tail
+            node.tail = prev
+            prev = node
+            node = node_tail
+        self.head = prev
+        return self
+
     def alternating_split(self):
         """
         >>> ls = LinkedList(1, 2, 1, 2, 1)
@@ -285,6 +306,74 @@ class LinkedList(object):
             if self.head:
                 second.move_node(self)
         return (first, second)
+
+    def shuffle_merge(self, ll):
+        """
+        >>> a = LinkedList(1, 2, 3, 4, 5)
+        >>> b = LinkedList(10, 11, 12)
+        >>> a.shuffle_merge(b)
+        1-->10-->2-->11-->3-->12-->4-->5-/->
+        >>> a = LinkedList(1, 2, 3)
+        >>> b = LinkedList(10, 11, 12, 13, 14)
+        >>> a.shuffle_merge(b)
+        1-->10-->2-->11-->3-->12-->13-->14-/->
+        >>> b
+        -/->
+        """
+        # What if self is empty?
+        i = self.head
+        j = ll.head
+        ll.head = None
+        while i and j:
+            i_tail = i.tail
+            j_tail = j.tail
+            # i -> j -> i.tail ...
+            i.tail = j
+            if i_tail:
+                j.tail = i_tail
+            i = i_tail
+            j = j_tail
+        return self
+
+    @classmethod
+    def sorted_merge(cls, a, b):
+        """
+        >>> LinkedList.sorted_merge(LinkedList(2, 4), LinkedList(1, 3, 5))
+        1-->2-->3-->4-->5-/->
+        >>> LinkedList.sorted_merge(LinkedList(1, 3, 5), LinkedList(2, 4))
+        1-->2-->3-->4-->5-/->
+        >>> LinkedList.sorted_merge(LinkedList(1, 3, 5), LinkedList())
+        1-->3-->5-/->
+        >>> LinkedList.sorted_merge(LinkedList(), LinkedList(1, 3, 5))
+        1-->3-->5-/->
+        """
+        result = LinkedList()
+        while a.head and b.head:
+            if a.head.value < b.head.value:
+                result.move_node(a)
+            else:
+                result.move_node(b)
+        while a.head:
+            result.move_node(a)
+        while b.head:
+            result.move_node(b)
+        return result.reverse()
+
+    def merge_sort(self):
+        """
+        >>> ls = LinkedList(7, 1, 6, 5, 2, 3, 4)
+        >>> ls.merge_sort()
+        >>> ls
+        1-->2-->3-->4-->5-->6-->7-/->
+        """
+        if self.head.tail is None:
+            return
+        front, back = self.front_back_split()
+        front.merge_sort()
+        back.merge_sort()
+        self.head = LinkedList.sorted_merge(front, back).head
+
+
 
 
 if __name__ == '__main__':
