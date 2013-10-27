@@ -13,6 +13,22 @@ class LinkedListNode(object):
         else:
             return '%r-->%r' % (self.value, self.tail)
 
+    def recursive_reverse(self):
+        """
+        >>> ll = LinkedList(1, 2, 3, 4).head
+        >>> ll.recursive_reverse()
+        4-->3-->2-->1-/->
+        """
+        if self.tail is None:
+            return self
+        else:
+            # 1 -> (2 -> 3 -> 4)
+            # (4 -> 3 -> 2) -> 1
+            new_head = self.tail.recursive_reverse()
+            self.tail.tail = self
+            self.tail = None
+            return new_head
+
 class LinkedList(object):
 
     def __init__(self, *args):
