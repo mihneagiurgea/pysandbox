@@ -389,7 +389,58 @@ class LinkedList(object):
         back.merge_sort()
         self.head = LinkedList.sorted_merge(front, back).head
 
+def reverse_kgroup(head, k):
+    """
+    >>> ls = LinkedList(1, 2, 3, 4, 5).head
+    >>> reverse_kgroup(ls, 2)
+    2-->1-->4-->3-->5-/->
+    >>> ls = LinkedList(1, 2, 3, 4, 5).head
+    >>> reverse_kgroup(ls, 3)
+    3-->2-->1-->4-->5-/->
+    >>> ls = LinkedList(1, 2, 3).head
+    >>> reverse_kgroup(ls, 4)
+    1-->2-->3-/->
+    >>> ls = LinkedList(1, 2, 3).head
+    >>> reverse_kgroup(ls, 3)
+    3-->2-->1-/->
+    >>> ls = LinkedList(1, 2, 3, 4, 5, 6, 7, 8).head
+    >>> reverse_kgroup(ls, 3)
+    3-->2-->1-->6-->5-->4-->7-->8-/->
+    """
 
+    def walk(node, k):
+        while k and node:
+            node = node.tail
+            k -= 1
+        return node
+
+    def rev_between(a, b):
+        """Reverse nodes between a and b."""
+        prev = a
+        node = a.tail
+        a.tail = None
+        while prev != b:
+            next = node.tail
+            node.tail = prev
+            prev = node
+            node = next
+
+    fake_node = LinkedListNode(None, tail=head)
+    node = head
+    prev = fake_node
+    while node:
+        end_of_group = walk(node, k-1)
+        if end_of_group is None:
+            prev.tail = node
+            node = None
+        else:
+            next_group = end_of_group.tail
+            rev_between(node, end_of_group)
+            prev.tail = end_of_group
+            prev = node
+            node = next_group
+
+    return fake_node.tail
 
 
 if __name__ == '__main__':
