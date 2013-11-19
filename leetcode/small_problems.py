@@ -344,6 +344,27 @@ def subsets2(S):
 
     return generate_all(S)
 
+import re
+
+def is_number(s):
+    """
+    >>> is_number('0')
+    True
+    >>> is_number(' 0.1 ')
+    True
+    >>> is_number('abc')
+    False
+    >>> is_number('1 a')
+    False
+    >>> is_number('2e10')
+    True
+    >>> is_number('2.1e-3')
+    True
+    >>> is_number('+2.1e-3')
+    True
+    """
+    return bool(re.match('\s*[+-]?(\d+)(\.\d+)?(e[+-]?\d+)?\s*$', s))
+
 if __name__ == '__main__':
     # print subsets2([2, 1, 2])
     # print permutation_sequence(3, 5)
