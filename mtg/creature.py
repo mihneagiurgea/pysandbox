@@ -1,30 +1,32 @@
 class Creature(object):
+    """A stateless creature (i.e. a single Magic creature card or token).
 
-    def __init__(self, power, toughness, tapped=False):
+    Attributes:
+      * power
+      * toughness
+    """
+
+    def __init__(self, power, toughness):
         if not (isinstance(power, int) and isinstance(toughness, int)):
             raise ValueError('Invalid power or toughness.')
         self.power = power
         self.toughness = toughness
-        self.tapped = tapped
 
-    def tap(self):
-        self.tapped = True
+    def normalize(self):
+        """Normalizes this instance by converting it to a single integer."""
+        return self.power << 5 | self.toughness
 
-    def untap(self):
-        self.tapped = False
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.normalize() == other.normalize()
+        return NotImplemented
+
+    def __repr__(self):
+        return '%d/%d' % (self.power, self.toughness)
 
     @classmethod
     def from_string(cls, string):
-        tapped = False
-        if 'T' in string:
-            tapped = True
-            string = string.split(' ')[0]
-        p, t = map(int, string.strip().split('/'))
-        return Creature(p, t, tapped=tapped)
+        p, t = string.strip().split('/')
+        return Creature(int(p), int(t))
 
-    def __repr__(self):
-        s = '%d/%d' % (self.power, self.toughness)
-        if self.tapped:
-            s = '%s (T)' % s
-        return s
-
+CreatureType = Creature
