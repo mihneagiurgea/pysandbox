@@ -1,0 +1,1 @@
+from creature import CreatureType
