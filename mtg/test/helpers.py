@@ -14,10 +14,14 @@ def random_creature(power=None, toughness=None):
         toughness = random.randint(0, 5)
     return Creature(power, toughness)
 
-def random_creature_state(controlling_player=None):
+random_creature_type = random_creature
+
+def random_creature_state(controlling_player=None, power=None, toughness=None):
     if controlling_player is None:
         controlling_player = random.randint(0, 1)
-    return CreatureState(controlling_player, bool(random.randint(0, 1)))
+    creature_type = random_creature(power, toughness)
+    return CreatureState(creature_type, controlling_player,
+                         bool(random.randint(0, 1)))
 
 def random_battleground_state(nr_creatures=9):
     state = BattlegroundState()

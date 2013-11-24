@@ -176,17 +176,18 @@ class GameState(object):
                 return False
         return True
 
-    def resolve_combat(self, blocking_creatures_order):
-        self._expect_step(TurnPhase.CombatStep, combat_assignment)
+    def resolve_combat(self, combat_assignment):
+        self._expect_step(TurnPhase.CombatStep)
 
-        for attacking_creature, blockers in combat_assignment.assignment.items():
-            self._resolve_attacker(attacking_creature, blockers)
+        # TODO - check that combat_assignment is similar to the current one
+        for attacker_uid, blocker_uids in combat_assignment.items():
+            self._resolve_attacker(attacker_uid, blocker_uids)
         self.end_turn()
 
-    def _resolve_attacker(self, attacking_creature, blockers):
-        if not blockers:
+    def _resolve_attacker(self, attacker_uid, blocker_uids):
+        if not blocker_uids:
             # Deal damage to defending player.
-            self.player_life[self.defending_player] -= attacking_creature.power
+            self.player_life[self.defending_player] -= attacker_uid.power
             return
 
         attacker_damage = attacking_creature.power

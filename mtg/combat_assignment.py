@@ -1,4 +1,5 @@
 class CombatAssignment(object):
+    """
 
     def __init__(self, game_state):
         self.game_state = game_state
@@ -37,3 +38,5 @@ class CombatAssignment(object):
             raise ValueError('Invalid reordering of blockers: %r' %
                              blocking_creatures)
         self.assignment[attacking_creature] = blocking_creatures
+    """
+    pass
