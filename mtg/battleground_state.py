@@ -1,7 +1,6 @@
 from collections import defaultdict
 import re
 
-from creature import CreatureType
 from creature_state import CreatureState
 
 
@@ -19,19 +18,15 @@ class BattlegroundState(object):
     """
 
     def __init__(self):
-        self._uid_to_creature_type = {}
         self._uid_to_creature_state = {}
         self._next_uid = 1
 
     def normalize(self):
         """Normalize this instance by converting it to something hashable."""
         tuples = []
-        for uid in self._uid_to_creature_type:
-            # Convert each creature (type & state) to a tuple, after
-            # normalizing it.
-            x = self._uid_to_creature_type[uid].normalize()
-            y = self._uid_to_creature_state[uid].normalize()
-            tuples.append((x, y))
+        for creature_state in self._uid_to_creature_state.values():
+            # Normalize each creature state.
+            tuples.append(creature_state.normalize())
         # Sort tuples to eliminate the order of the creatures as a
         # differentiating factor between battleground states.
         tuples.sort()
@@ -55,12 +50,8 @@ class BattlegroundState(object):
         WARNING - this is not as strong as the .normalize() method.
         """
         creatures = ([], [])
-        for uid in self._uid_to_creature_type:
-            creature_type = self._uid_to_creature_type[uid]
-            creature_state = self._uid_to_creature_state[uid]
-            s = '%r' % creature_type
-            if repr(creature_state):
-                s = '%s %r' % (s, creature_state)
+        for creature_state in self._uid_to_creature_state.values():
+            s = repr(creature_state)
             creatures[creature_state.controlling_player].append(s)
         player0 = self._CREATURE_SEPARATOR.join(creatures[0])
         player1 = self._CREATURE_SEPARATOR.join(creatures[1])
@@ -79,35 +70,28 @@ class BattlegroundState(object):
             if not string:
                 continue
             for creature_string in string.split(cls._CREATURE_SEPARATOR):
-                strarr = creature_string.split(' ')
-                creature_type = CreatureType.from_string(strarr[0])
-                if len(strarr) != 1:
-                    creature_state = CreatureState.from_string(strarr[1], player)
-                else:
-                    creature_state = CreatureState(player)
-                battleground_state.add_creature(creature_type, creature_state)
+                creature_state = CreatureState.from_string(creature_string,
+                                                           player)
+                battleground_state.add_creature(creature_state)
         return battleground_state
 
     def __getitem__(self, uid):
         """Returns the CreatureState instance associated to the given uid."""
         return self._uid_to_creature_state[uid]
 
-    def add_creature(self, creature_type, creature_state):
-        if not isinstance(creature_type, CreatureType):
-            raise ValueError('Invalid type: %r' % creature_type)
+    def add_creature(self, creature_state):
         if not isinstance(creature_state, CreatureState):
             raise ValueError('Invalid type: %r' % creature_state)
 
-        self._uid_to_creature_type[self._next_uid] = creature_type
         self._uid_to_creature_state[self._next_uid] = creature_state
         self._next_uid += 1
 
         return self._next_uid - 1
 
     def remove_creature(self, uid):
-        del self._uid_to_creature_type[uid]
         del self._uid_to_creature_state[uid]
 
+    # Do we still need this?
     def get_combat_assignment(self):
         """Returns the current combat assignment (how blockers are ordered).
 
