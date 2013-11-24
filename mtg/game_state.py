@@ -16,11 +16,11 @@ class GameState(object):
 
     Structure of a turn and how it relates to state:
     1) DeclareAttackersStep - during this step attackers are declared,
-    one by one, via the .declare_attacker(uid) method. After this step
+    one by one, via the .declare_attackers method. After this step
     the state of which creatures are attacking is kept in battleground, via
     CreatureState (an implied list).
     2) DeclareBlockersStep - during this step blockers declared (as blocking
-    some attacking creature), via the .declare_blocker(uid) method. After this
+    some attacking creature), via the .declare_blockers method. After this
     step the state of which creature blocks where, and which creature is
     not blocked is kept in battleground, via CreatureState => an implied mapping
         Map[ <attacking_creature> -> List[<blocking_creature>] ]
@@ -30,14 +30,28 @@ class GameState(object):
         Map[ <attacking_creature> -> List[<blocking_creature>] ].
     """
 
-    def __init__(self):
+    def __init__(self, battleground=None):
+        if battleground is None:
+            battleground = BattlegroundState()
+
         self.player_life = [20, 20]
-        self.battleground = BattlegroundState()
+        self.battleground = battleground
         self.player_creatures = [ [], [] ]
         # This will point to a CombatAssignment object.
         self._combat_assignment = None
         self.active_player = 0
         self.phase = TurnPhase.DeclareAttackers
+
+    def normalize(self):
+        """Normalize this instance by converting it to something hashable."""
+        normalized = (self.player_life[0], self.player_life[1],
+                      self.active_player, self.phase)
+        return (normalized, self.battleground.normalize())
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.normalize() == other.normalize()
+        return NotImplemented
 
     def __repr__(self):
         """Converts to a string of the following form:
@@ -76,14 +90,6 @@ class GameState(object):
             BattlegroundState.from_string(params['battleground'])
         return game_state
 
-    def add_creature(self, player, creature):
-        """Add a creature under some player's control."""
-        pass
-
-    def remove_creature(self, player, creature):
-        """Removes a creature from some player's control."""
-        pass
-
     @property
     def attacking_player(self):
         return self.active_player
@@ -94,15 +100,11 @@ class GameState(object):
 
     @property
     def attacking_player_creatures(self):
-        return self.player_creatures[self.attacking_player]
+        return self.battleground.get_creatures(self.attacking_player)
 
     @property
     def defending_player_creatures(self):
-        return self.player_creatures[self.defending_player]
-
-    @property
-    def all_creatures(self):
-        return self.player_creatures[0] + self.player_creatures[1]
+        return self.battleground.get_creatures(self.defending_player)
 
     def make_combat_assignment(self):
         return CombatAssignment(self)

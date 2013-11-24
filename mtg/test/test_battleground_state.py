@@ -1,9 +1,7 @@
 import unittest
 
 from battleground_state import BattlegroundState
-from creature_state import CreatureState
 from factories import BattlegroundStateFactory, CreatureStateFactory
-from test.helpers import *
 
 class TestBattlegroundState(unittest.TestCase):
 
@@ -73,3 +71,8 @@ class TestBattlegroundState(unittest.TestCase):
             s = repr(state)
             self.assertEqual(repr(BattlegroundState.from_string(s)), s,
                              'Invalid deserialize & serialize transformation')
+
+    def test_get_creatures(self):
+        bg = BattlegroundStateFactory.build_with_creatures(9)
+        self.assertEqual(len(bg.creatures), 9)
+        self.assertEqual(len(bg.get_creatures(0)) + len(bg.get_creatures(1)), 9)

@@ -5,7 +5,6 @@ from creature import CreatureType
 from creature_state import CreatureState
 from battleground_state import BattlegroundState
 from game_state import GameState
-from turn_phase import TurnPhase
 
 
 class CreatureTypeFactory(factory.Factory):
@@ -30,8 +29,23 @@ class BattlegroundStateFactory(factory.Factory):
 
     # TODO - how can we better integrate nr_creatures?
     @classmethod
-    def build_with_creatures(cls, nr_creatures):
+    def build_with_creatures(cls, nr_creatures=9):
         obj = cls.build()
         for i in range(nr_creatures):
             obj.add_creature(CreatureStateFactory())
+        return obj
+
+
+class GameStateFactory(factory.Factory):
+
+    FACTORY_FOR = GameState
+
+    battleground = factory.SubFactory(BattlegroundStateFactory)
+
+    # TODO - how can we better integrate nr_creatures?
+    @classmethod
+    def build_with_creatures(cls, nr_creatures=9):
+        obj = cls.build()
+        for i in range(nr_creatures):
+            obj.battleground.add_creature(CreatureStateFactory())
         return obj

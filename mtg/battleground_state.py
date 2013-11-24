@@ -79,6 +79,17 @@ class BattlegroundState(object):
         """Returns the CreatureState instance associated to the given uid."""
         return self._uid_to_creature_state[uid]
 
+    @property
+    def creatures(self):
+        return self._uid_to_creature_state.values()
+
+    def get_creatures(self, controlling_player):
+        result = []
+        for creature in self.creatures:
+            if creature.controlling_player == controlling_player:
+                result.append(creature)
+        return result
+
     def add_creature(self, creature_state):
         if not isinstance(creature_state, CreatureState):
             raise ValueError('Invalid type: %r' % creature_state)

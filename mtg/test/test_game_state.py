@@ -1,34 +1,38 @@
 import unittest2 as unittest
 
 from game_state import GameState
-from test.helpers import *
+from factories import GameStateFactory
 
 class TestGameState(unittest.TestCase):
 
-    SERIALIZATION_FIXTURES = [
+    SERIALIZATION_FIXTURES = (
         '20/18 (0/0): 2/3 (T), 4/6 vs 0/7',
         '20/-2 (0/0):  vs 0/7',
         '-2/-2 (1/0):  vs '
-    ]
+    )
 
-    # def test_equality(self):
-    #     gs1 = random_game_state(nr_creatures=7)
-    #     gs2 = random_game_state(nr_creatures=7)
-    #     self.assertNotEqual(gs1, gs2)
+    def test_equality(self):
+        game_state1 = GameStateFactory.build_with_creatures(9)
+        game_state2 = GameStateFactory.build_with_creatures(8)
+
+        self.assertNotEqual(game_state1, game_state2)
+
+        game_state2.battleground = game_state1.battleground
+        self.assertEqual(game_state1, game_state2)
 
     def test_serialization(self):
         for s in self.SERIALIZATION_FIXTURES:
             self.assertEqual(repr(GameState.from_string(s)), s,
                              'Invalid deserialize & serialize transformation')
         for _ in range(10):
-            game_state = random_game_state()
+            game_state = GameStateFactory.build_with_creatures()
             s = repr(game_state)
             self.assertEqual(repr(GameState.from_string(s)), s,
                              'Invalid deserialize & serialize transformation')
 
     def test_combat_phase_one_blocker(self):
         game_state = GameState.from_string('20/20 (0/0): 2/3, 4/6 vs 3/1')
-        cr1, cr2, cr3 = game_state.all_creatures
+        cr1, cr2, cr3 = game_state.battleground.creatures
 
         ca = game_state.make_combat_assignment()
 
@@ -47,7 +51,7 @@ class TestGameState(unittest.TestCase):
 
     def test_combat_phase_one_attacker(self):
         game_state = GameState.from_string('20/20 (0/0): 4/6 vs 1/2, 2/2, 3/1')
-        cr1, cr2, cr3, cr4 = game_state.all_creatures
+        cr1, cr2, cr3, cr4 = game_state.battleground.creatures
 
         ca = game_state.make_combat_assignment()
 
