@@ -1,6 +1,7 @@
 import unittest
 
 from battleground_state import BattlegroundState
+from combat_assignment import CombatAssignment
 from factories import BattlegroundStateFactory, CreatureStateFactory
 
 class TestBattlegroundState(unittest.TestCase):
@@ -76,3 +77,23 @@ class TestBattlegroundState(unittest.TestCase):
         bg = BattlegroundStateFactory.build_with_creatures(9)
         self.assertEqual(len(bg.creatures), 9)
         self.assertEqual(len(bg.get_creatures(0)) + len(bg.get_creatures(1)), 9)
+
+    def test_get_combat_assignment(self):
+        bg = BattlegroundState()
+
+        cr1 = bg.add_creature(CreatureStateFactory())
+        cr2 = bg.add_creature(CreatureStateFactory())
+        cr3 = bg.add_creature(CreatureStateFactory())
+        cr4 = bg.add_creature(CreatureStateFactory())
+
+        bg[cr1].attack()
+        bg[cr2].attack()
+        bg[cr3].block(cr1)
+        bg[cr4].block(cr1)
+
+        combat_assignment = bg.get_combat_assignment()
+        self.assertIsInstance(combat_assignment, CombatAssignment)
+        self.assertEqual(len(combat_assignment), 2)
+
+        expected_ca = CombatAssignment({cr1: [cr3, cr4], cr2: []})
+        self.assertTrue(combat_assignment.is_reorder_of(expected_ca))

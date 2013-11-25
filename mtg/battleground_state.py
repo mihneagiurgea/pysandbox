@@ -1,6 +1,7 @@
 from collections import defaultdict
 import re
 
+from combat_assignment import CombatAssignment
 from creature_state import CreatureState
 
 
@@ -83,6 +84,10 @@ class BattlegroundState(object):
     def creatures(self):
         return self._uid_to_creature_state.values()
 
+    @property
+    def creatures_with_uids(self):
+        return self._uid_to_creature_state.items()
+
     def get_creatures(self, controlling_player):
         result = []
         for creature in self.creatures:
@@ -109,7 +114,7 @@ class BattlegroundState(object):
         Returns:
             A dict { <attacker_uid> -> List[<blocker_uids>] }
         """
-        combat_assignment = defaultdict(list)
+        combat_assignment = CombatAssignment()
         for uid, state in self._uid_to_creature_state.items():
             if state.attacking:
                 # Touch uid to create an empty list.
