@@ -65,6 +65,20 @@ class TestGameState(unittest.TestCase):
         with self.assertRaises(ValueError):
             game_state.resolve_combat(combat_assignment)
 
+    def test_combat_phase_intermediate_states(self):
+        game_state, cr1, cr2, cr3 = \
+            self._prepare_game_state('20/20 (0/0): 2/3, 4/6 vs 3/1')
+
+        # Declare attackers 2/3
+        game_state.declare_attackers([cr1])
+
+        self.assertGameState(game_state, '20/20 (0/1): 2/3 (TA), 4/6 vs 3/1')
+
+        # Declare blockers 3/1 -> 2/3
+        game_state.declare_blockers({cr3: cr1})
+        self.assertGameState(game_state,
+                             '20/20 (0/2): 2/3 (TA), 4/6 vs 3/1 (B#1)')
+
     def test_combat_phase_one_attacker_no_blockers(self):
         game_state, cr1, cr2 = \
             self._prepare_game_state('20/20 (0/0): 4/6 vs 3/1')

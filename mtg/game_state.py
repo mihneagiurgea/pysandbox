@@ -57,9 +57,6 @@ class GameState(object):
 
         WARNING - this is not as strong as the .normalize() method.
         """
-        if self.phase != TurnPhase.DeclareAttackers:
-            raise NotImplementedError('Serialization is not implemented for this phase')
-
         return '%d/%d (%d/%d): %r' % (self.player_life[0], self.player_life[1],
                                       self.active_player, self.phase,
                                       self.battleground)
