@@ -1,9 +1,6 @@
-import copy
 import re
 
 from battleground_state import BattlegroundState
-from combat_assignment import CombatAssignment
-from creature import Creature
 from turn_phase import TurnPhase
 
 
@@ -35,11 +32,9 @@ class GameState(object):
             battleground = BattlegroundState()
 
         self.player_life = [20, 20]
-        self.battleground = battleground
-        # This will point to a CombatAssignment object.
-        self._combat_assignment = None
         self.active_player = 0
         self.phase = TurnPhase.DeclareAttackers
+        self.battleground = battleground
 
     def normalize(self):
         """Normalize this instance by converting it to something hashable."""
@@ -115,11 +110,6 @@ class GameState(object):
     def _expect_step(self, expected_phase_or_step):
         if self.phase != expected_phase_or_step:
             raise ValueError('Invalid turn phase or step')
-        # if not isinstance(combat_assignment, CombatAssignment):
-        #     raise ValueError('Invalid combat_assignment argument')
-        # if combat_assignment.game_state != self:
-        #     raise ValueError('CombatAssignment argument should be associated '
-        #                      ' with current game state')
 
     def declare_attackers(self, attacking_creature_uids):
         self._expect_step(TurnPhase.DeclareAttackers)
@@ -144,12 +134,15 @@ class GameState(object):
                 return False
         return True
 
-    def declare_blockers(self, blocking_assignment):
+    def declare_blockers(self, blocking_assignment=None):
         """
         Args:
             blocking_assignment: a map of <blocker_uid> -> <blocker_uid>
         """
         self._expect_step(TurnPhase.DeclareBlockers)
+
+        if blocking_assignment is None:
+            blocking_assignment = {}
         if not self.is_valid_block(blocking_assignment):
             raise ValueError('Invalid blocking assignment')
 
@@ -232,6 +225,5 @@ class GameState(object):
     def end_turn(self):
         """End the current turn, and pass turn to the other player."""
         self.active_player = 1 - self.active_player
-        self._combat_assignment = None
         self.phase = TurnPhase.DeclareAttackers
         self.untap()

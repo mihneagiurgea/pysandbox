@@ -65,7 +65,20 @@ class TestGameState(unittest.TestCase):
         with self.assertRaises(ValueError):
             game_state.resolve_combat(combat_assignment)
 
-    def test_combat_phase_one_blocker(self):
+    def test_combat_phase_one_attacker_no_blockers(self):
+        game_state, cr1, cr2 = \
+            self._prepare_game_state('20/20 (0/0): 4/6 vs 3/1')
+
+        # Declare attackers 4/6
+        game_state.declare_attackers([cr1])
+        # Declare no blockers
+        game_state.declare_blockers()
+        # Resolve combat damage, with arbitrary order of blockers.
+        game_state.resolve_combat()
+
+        self.assertGameState(game_state, '20/16 (1/0): 4/6 (T) vs 3/1')
+
+    def test_combat_phase_one_attacker_one_blocker(self):
         game_state, cr1, cr2, cr3 = \
             self._prepare_game_state('20/20 (0/0): 2/3, 4/6 vs 3/1')
 
@@ -76,12 +89,9 @@ class TestGameState(unittest.TestCase):
         # Resolve combat damage, with arbitrary order of blockers.
         game_state.resolve_combat()
 
-        expected = GameState.from_string('20/16 (1/0): 4/6 (T) vs ')
-        print game_state.normalize()
-        print expected.normalize()
-        self.assertEqual(game_state, expected)
+        self.assertGameState(game_state, '20/16 (1/0): 4/6 (T) vs ')
 
-    def test_combat_phase_one_attacker(self):
+    def test_combat_phase_one_attacker_multiple_blockers(self):
         game_state, cr1, cr2, cr3, cr4 = \
             self._prepare_game_state('20/20 (0/0): 4/6 vs 1/2, 2/2, 3/1')
 
@@ -93,5 +103,22 @@ class TestGameState(unittest.TestCase):
         combat_assignment = CombatAssignment({cr1: [cr4, cr3, cr2]})
         game_state.resolve_combat(combat_assignment)
 
-        expected_state = '20/20 (1/0): vs 1/2'
-        self.assertEqual(game_state, GameState.from_string(expected_state))
+        self.assertGameState(game_state, '20/20 (1/0): vs 1/2')
+
+    def test_combat_phase_multiple_attackers_multiple_blockers(self):
+        game_state, cr1, cr2, cr3, cr4, cr5 = \
+            self._prepare_game_state('20/20 (0/0): 7/7, 3/5 vs 1/1, 2/2, 3/3')
+
+        # Declare attackers 7/7 and 3/5
+        game_state.declare_attackers([cr1, cr2])
+        # Declare blockers (1/1 -> 7/7, 2/2 -> 3/5, 3/3 -> 3/5)
+        game_state.declare_blockers({cr3: cr1, cr4: cr2, cr5: cr2})
+        # Resolve combat damage after ordering blockers.
+        combat_assignment = CombatAssignment({cr1: [cr3], cr2: [cr5, cr4]})
+        game_state.resolve_combat(combat_assignment)
+
+        self.assertGameState(game_state, '20/20 (1/0): 7/7 (T) vs 2/2')
+
+    def assertGameState(self, game_state, expected_state_string):
+        expected_game_state = GameState.from_string(expected_state_string)
+        self.assertEqual(game_state, expected_game_state)
