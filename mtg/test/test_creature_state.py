@@ -5,7 +5,7 @@ from factories import CreatureStateFactory
 
 class TestCreatureState(unittest.TestCase):
 
-    SERIALIZATION_FIXTURES = ('2/3 (T)', '0/7')
+    SERIALIZATION_FIXTURES = ('1/1 (TA)', '1/1 (A)', '1/1 (B#5)', '2/3 (T)', '0/7')
 
     def test_equality(self):
         cr1 = CreatureStateFactory()
