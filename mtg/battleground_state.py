@@ -1,4 +1,3 @@
-from collections import defaultdict
 import re
 
 from combat_assignment import CombatAssignment
