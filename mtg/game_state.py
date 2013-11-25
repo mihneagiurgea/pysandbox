@@ -25,9 +25,9 @@ class GameState(object):
     not blocked is kept in battleground, via CreatureState => an implied mapping
         Map[ <attacking_creature> -> List[<blocking_creature>] ]
     3) CombatDamageStep - during this step the blockers must be ordered by
-    the attacking player, via the .order_blockers() method. This will create
-    an explicit mapping, which will represent the BlockingCreaturesOrder:
-        Map[ <attacking_creature> -> List[<blocking_creature>] ].
+    the attacking player, via the .resolve_combat(combat_assignment) method.
+    This will take as argument an explicit mapping, which will represent some
+    ordering of the blocking creatures.
     """
 
     def __init__(self, battleground=None):
@@ -36,7 +36,6 @@ class GameState(object):
 
         self.player_life = [20, 20]
         self.battleground = battleground
-        self.player_creatures = [ [], [] ]
         # This will point to a CombatAssignment object.
         self._combat_assignment = None
         self.active_player = 0
@@ -106,12 +105,9 @@ class GameState(object):
     def defending_player_creatures(self):
         return self.battleground.get_creatures(self.defending_player)
 
-    def make_combat_assignment(self):
-        return CombatAssignment(self)
-
     def untap(self):
         """Untap for active player."""
-        for creature in self.player_creatures[self.active_player]:
+        for creature in self.battleground.get_creatures(self.active_player):
             creature.untap()
 
     ### CombatPhase-related ###
@@ -159,7 +155,7 @@ class GameState(object):
 
         for blocker_uid, blocked_uid in blocking_assignment.items():
             blocker = self.battleground[blocker_uid]
-            blocker.block(blocker_uid)
+            blocker.block(blocked_uid)
 
         self.phase = TurnPhase.CombatStep
 
@@ -178,31 +174,60 @@ class GameState(object):
                 return False
         return True
 
-    def resolve_combat(self, combat_assignment):
+    def resolve_combat(self, combat_assignment=None):
+        """Resolve combat, given the specified CombatAssignment, if any.
+
+        If combat_assignment is missing, an arbitrary (undefined)
+        CombatAssignment will be used instead.
+        """
         self._expect_step(TurnPhase.CombatStep)
 
-        # TODO - check that combat_assignment is similar to the current one
+        current_combat_assignment = self.battleground.get_combat_assignment()
+        if combat_assignment is None:
+            combat_assignment = current_combat_assignment
+        else:
+            # Is combat_assignment a correct reordering or all blockers?
+            if not combat_assignment.is_reorder_of(current_combat_assignment):
+                raise ValueError('Invalid combat_assignment argument: %r' %
+                                 combat_assignment)
+
         for attacker_uid, blocker_uids in combat_assignment.items():
-            self._resolve_attacker(attacker_uid, blocker_uids)
+            if blocker_uids:
+                self._resolve_blocked_attacker(attacker_uid, blocker_uids)
+            else:
+                self._resolve_unblocked_attacker(attacker_uid)
         self.end_turn()
 
-    def _resolve_attacker(self, attacker_uid, blocker_uids):
-        if not blocker_uids:
-            # Deal damage to defending player.
-            self.player_life[self.defending_player] -= attacker_uid.power
-            return
+    def _resolve_unblocked_attacker(self, attacker_uid):
+        attacking_creature = self.battleground[attacker_uid]
+        # Deal damage to defending player.
+        self.player_life[self.defending_player] -= attacking_creature.power
+        attacking_creature.remove_from_combat()
 
-        attacker_damage = attacking_creature.power
-        for blocker in blockers:
-            if attacker_damage >= blocker.toughness:
-                attacker_damage -= blocker.toughness
+    def _resolve_blocked_attacker(self, attacker_uid, blocker_uids):
+        attacking_creature = self.battleground[attacker_uid]
+
+        blockers = [self.battleground[uid] for uid in blocker_uids]
+        blockers_total_damage = sum(blocker.power for blocker in blockers)
+
+        # Destroy blockers, then deal remaining damage (if any) to defending
+        # player.
+        attacking_damage = attacking_creature.power
+        for uid, blocker in zip(blocker_uids, blockers):
+            if attacking_damage >= blocker.toughness:
+                attacking_damage -= blocker.toughness
                 # Blocker has died, remove it from current state.
-                self.player_creatures[self.defending_player].remove(blocker)
+                self.battleground.remove_creature(uid)
             else:
                 break
-        blockers_damage = sum(blocker.power for blocker in blockers)
-        if blockers_damage >= attacking_creature.toughness:
-            self.player_creatures[self.active_player].remove(attacking_creature)
+
+        # Destroy attacker, if needed.
+        if blockers_total_damage >= attacking_creature.toughness:
+            self.battleground.remove_creature(attacker_uid)
+
+        attacking_creature.remove_from_combat()
+        for blocker in blockers:
+            blocker.remove_from_combat()
 
     def end_turn(self):
         """End the current turn, and pass turn to the other player."""

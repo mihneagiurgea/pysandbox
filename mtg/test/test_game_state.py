@@ -1,5 +1,6 @@
 import unittest2 as unittest
 
+from combat_assignment import CombatAssignment
 from game_state import GameState
 from factories import GameStateFactory
 
@@ -20,6 +21,10 @@ class TestGameState(unittest.TestCase):
         game_state2.battleground = game_state1.battleground
         self.assertEqual(game_state1, game_state2)
 
+        game_state1 = GameState.from_string('20/20 (1/0): vs 1/2')
+        game_state2 = GameState.from_string('20/20 (1/0): vs 1/2')
+        self.assertEqual(game_state1, game_state2)
+
     def test_serialization(self):
         for s in self.SERIALIZATION_FIXTURES:
             self.assertEqual(repr(GameState.from_string(s)), s,
@@ -30,42 +35,63 @@ class TestGameState(unittest.TestCase):
             self.assertEqual(repr(GameState.from_string(s)), s,
                              'Invalid deserialize & serialize transformation')
 
-    def test_combat_phase_one_blocker(self):
-        game_state = GameState.from_string('20/20 (0/0): 2/3, 4/6 vs 3/1')
-        cr1, cr2, cr3 = game_state.battleground.creatures
+    def test_untap(self):
+        game_state = GameState.from_string('20/20 (0/0): 2/3 (T), 4/6 (T) vs ')
+        game_state.untap()
 
-        ca = game_state.make_combat_assignment()
-
-        # Declare attackers
-        ca.declare_attacker(cr1)
-        ca.declare_attacker(cr2)
-        game_state.declare_attackers(ca)
-        # Declare blockers
-        ca.declare_blocker(cr3, cr1)
-        game_state.declare_blockers(ca)
-        # Resolve combat damage (blockers ordering has been skipped).
-        game_state.resolve_combat(ca)
-
-        expected_state = '20/16 (1/0): 4/6 (T) vs '
+        expected_state = '20/20 (0/0): 2/3, 4/6 vs '
         self.assertEqual(repr(game_state), expected_state)
+
+    def _prepare_game_state(self, string):
+        game_state = GameState.from_string(string)
+        uids = [t[0] for t in game_state.battleground.creatures_with_uids]
+        uids.sort()
+        uids.insert(0, game_state)
+        return uids
+
+    def test_resolve_combat_invalid_argument(self):
+        """Test that resolve_combat raises an error when given an incorrect
+        argument."""
+        game_state, cr1, cr2, cr3 = \
+            self._prepare_game_state('20/20 (0/0): 2/3, 4/6 vs 3/1')
+
+        # Declare attackers 2/3 and 4/6
+        game_state.declare_attackers([cr1, cr2])
+        # Declare blockers 3/1 -> 2/3
+        game_state.declare_blockers({cr3: cr1})
+
+        combat_assignment = CombatAssignment({cr1: []})
+        # Resolve combat damage, with arbitrary order of blockers.
+        with self.assertRaises(ValueError):
+            game_state.resolve_combat(combat_assignment)
+
+    def test_combat_phase_one_blocker(self):
+        game_state, cr1, cr2, cr3 = \
+            self._prepare_game_state('20/20 (0/0): 2/3, 4/6 vs 3/1')
+
+        # Declare attackers 2/3 and 4/6
+        game_state.declare_attackers([cr1, cr2])
+        # Declare blockers 3/1 -> 2/3
+        game_state.declare_blockers({cr3: cr1})
+        # Resolve combat damage, with arbitrary order of blockers.
+        game_state.resolve_combat()
+
+        expected = GameState.from_string('20/16 (1/0): 4/6 (T) vs ')
+        print game_state.normalize()
+        print expected.normalize()
+        self.assertEqual(game_state, expected)
 
     def test_combat_phase_one_attacker(self):
-        game_state = GameState.from_string('20/20 (0/0): 4/6 vs 1/2, 2/2, 3/1')
-        cr1, cr2, cr3, cr4 = game_state.battleground.creatures
+        game_state, cr1, cr2, cr3, cr4 = \
+            self._prepare_game_state('20/20 (0/0): 4/6 vs 1/2, 2/2, 3/1')
 
-        ca = game_state.make_combat_assignment()
-
-        # Declare attackers
-        ca.declare_attacker(cr1)
-        game_state.declare_attackers(ca)
-        # Declare blockers
-        ca.declare_blocker(cr2, cr1)
-        ca.declare_blocker(cr3, cr1)
-        ca.declare_blocker(cr4, cr1)
-        game_state.declare_blockers(ca)
-        ca.order_blockers(cr1, [cr4, cr3, cr2])
-        # Resolve combat damage (blockers ordering has been skipped).
-        game_state.resolve_combat(ca)
+        # Declare attackers 4/6
+        game_state.declare_attackers([cr1])
+        # Declare blockers (everybody -> 4/6)
+        game_state.declare_blockers({cr2: cr1, cr3: cr1, cr4: cr1})
+        # Resolve combat damage after ordering blockers.
+        combat_assignment = CombatAssignment({cr1: [cr4, cr3, cr2]})
+        game_state.resolve_combat(combat_assignment)
 
         expected_state = '20/20 (1/0): vs 1/2'
-        self.assertEqual(repr(game_state), expected_state)
+        self.assertEqual(game_state, GameState.from_string(expected_state))
