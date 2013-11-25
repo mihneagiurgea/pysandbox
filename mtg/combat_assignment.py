@@ -1,42 +1,27 @@
-class CombatAssignment(object):
+from collections import defaultdict
+
+
+class CombatAssignment(defaultdict):
+    """Represents a complete combat assignment, including ordered blockers:
+        Map[ <attacking_creature_uid> -> List[<blocking_creature_uids>] ]
     """
 
-    def __init__(self, game_state):
-        self.game_state = game_state
-        # Map[AttackingCreature -> List[BlockingCreature]]
-        self.assignment = {}
+    def __init__(self, mapping=None):
+        if mapping is None:
+            mapping = {}
+        super(CombatAssignment, self).__init__(list, mapping)
 
-    @property
-    def attacking_creatures(self):
-        return self.assignment.keys()
-
-    def declare_attacker(self, creature):
-        # Is this a valid attack?
-        if creature.tapped:
-            raise ValueError('Tapped creatures cannot attack.')
-        if creature not in self.game_state.attacking_player_creatures:
-            raise ValueError('Invalid attacker: %r' % creature)
-        self.assignment[creature] = []
-
-    def declare_blocker(self, creature, attacking_creature):
-        # Is this a valid block?
-        if creature.tapped:
-            raise ValueError('Tapped creatures cannot attack.')
-        if creature not in self.game_state.defending_player_creatures:
-            raise ValueError('Invalid blocker: %r' % creature)
-        if attacking_creature not in self.assignment:
-            raise ValueError('Invalid attacking creature: %r' %
-                             attacking_creature)
-        self.assignment[attacking_creature].append(creature)
-
-    def order_blockers(self, attacking_creature, blocking_creatures):
-        # Is this a valid ordering of blockers?
-        if attacking_creature not in self.assignment:
-            raise ValueError('Invalid attacking creature: %r' %
-                             attacking_creature)
-        if set(blocking_creatures) != set(self.assignment[attacking_creature]):
-            raise ValueError('Invalid reordering of blockers: %r' %
-                             blocking_creatures)
-        self.assignment[attacking_creature] = blocking_creatures
-    """
-    pass
+    def is_reorder_of(self, other):
+        """Returns True if self can be obtained from other by reordering
+        blockers, False otherwise.
+        """
+        if not isinstance(other, CombatAssignment):
+            raise ValueError('Invalid other argument: %r' % other)
+        if len(self) != len(other):
+            return False
+        for key in self:
+            if key not in other:
+                return False
+            if sorted(self[key]) != sorted(other[key]):
+                return False
+        return True
