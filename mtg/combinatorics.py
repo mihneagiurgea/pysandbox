@@ -29,7 +29,7 @@ def get_all_mappings(R, T):
         yield mapping
 
 def get_all_shuffled_mappings(mapping):
-    """Given a { Int -> List[Int] } mapping, return all mappings m such that:
+    """Given a < <int> -> tuple<Int> > mapping, return all mappings m such that:
       * m.keys() == mapping.keys()
       * set(m[k]) == set(mapping[k])
 
@@ -43,7 +43,7 @@ def get_all_shuffled_mappings(mapping):
         else:
             key = keys[i]
             for perm in permutations(mapping[key]):
-                m[i] = perm
+                m[key] = perm
                 backtracking(m, i+1, results)
 
     results = []

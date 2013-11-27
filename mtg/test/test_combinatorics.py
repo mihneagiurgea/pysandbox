@@ -38,8 +38,12 @@ class TestCombinatorics(unittest.TestCase):
 
         hashable_mappings = []
         # Are all mappings unique and valid?
-        for mapping in shuffled_mappings:
-            items = sorted(mapping.items())
+        for m in shuffled_mappings:
+            self.assertEqual(set(mapping.keys()), set(m.keys()))
+            for key in mapping:
+                self.assertEqual(set(mapping[key]), set(m[key]))
+
+            items = sorted(m.items())
             # Convert each item to something hashable.
             items = [ (i[0], tuple(i[1])) for i in items ]
             hashable_mappings.append(tuple(items))
