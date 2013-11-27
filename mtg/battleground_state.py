@@ -1,3 +1,4 @@
+from collections import defaultdict
 import re
 
 from combat_assignment import CombatAssignment
@@ -113,11 +114,11 @@ class BattlegroundState(object):
         Returns:
             A dict { <attacker_uid> -> List[<blocker_uids>] }
         """
-        combat_assignment = CombatAssignment()
+        mapping = defaultdict(list)
         for uid, state in self._uid_to_creature_state.items():
             if state.attacking:
-                # Touch uid to create an empty list.
-                combat_assignment[uid]
+                # Touch uid to create an empty tuple.
+                mapping[uid]
             elif state.blocking:
-                combat_assignment[state.blocking].append(uid)
-        return combat_assignment
+                mapping[state.blocking].append(uid)
+        return CombatAssignment(mapping)

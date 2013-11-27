@@ -97,3 +97,5 @@ class TestBattlegroundState(unittest.TestCase):
 
         expected_ca = CombatAssignment({cr1: [cr3, cr4], cr2: []})
         self.assertTrue(combat_assignment.is_reorder_of(expected_ca))
+
+        self.assertIsInstance(combat_assignment[cr1], tuple)

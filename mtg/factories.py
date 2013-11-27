@@ -1,3 +1,5 @@
+import logging
+
 import factory
 from factory.fuzzy import FuzzyInteger
 
@@ -5,6 +7,9 @@ from creature import CreatureType
 from creature_state import CreatureState
 from battleground_state import BattlegroundState
 from game_state import GameState
+
+# Disable factory DEBUG logger.
+logging.getLogger("factory").setLevel(logging.WARN)
 
 
 class CreatureTypeFactory(factory.Factory):
