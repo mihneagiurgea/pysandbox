@@ -178,8 +178,9 @@ class GameState(object):
         else:
             # Is combat_assignment a correct reordering or all blockers?
             if not combat_assignment.is_reorder_of(current_combat_assignment):
-                raise ValueError('Invalid combat_assignment argument: %r' %
-                                 combat_assignment)
+                raise ValueError('Invalid combat_assignment argument: %r '
+                                 'is not a reorder of %r' %
+                                 (combat_assignment, current_combat_assignment))
 
         for attacker_uid, blocker_uids in combat_assignment.items():
             if blocker_uids:

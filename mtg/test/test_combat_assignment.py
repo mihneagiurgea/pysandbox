@@ -7,7 +7,7 @@ class TestCombatAssignment(unittest.TestCase):
 
     def test_instantiation(self):
         ca = CombatAssignment()
-        ca[3].append(5)
+        ca[3] = (5, )
         self.assertIsInstance(ca, CombatAssignment)
 
         ca = CombatAssignment({3: [4, 5], 10: ()})
