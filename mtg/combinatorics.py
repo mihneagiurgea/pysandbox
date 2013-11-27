@@ -1,3 +1,7 @@
+import copy
+from itertools import permutations
+
+
 def get_all_subsets(S):
     """Given a set S, return all 2^||S|| subsets of S."""
     N = len(S)
@@ -23,3 +27,25 @@ def get_all_mappings(R, T):
             mapping[R[j]] = T[digit]
             i /= M
         yield mapping
+
+def get_all_shuffled_mappings(mapping):
+    """Given a { Int -> List[Int] } mapping, return all mappings m such that:
+      * m.keys() == mapping.keys()
+      * set(m[k]) == set(mapping[k])
+
+    TODO - refactor to an iterative implementation
+    """
+    keys = sorted(mapping.keys())
+
+    def backtracking(m, i, results):
+        if i == len(keys):
+            results.append(copy.deepcopy(m))
+        else:
+            key = keys[i]
+            for perm in permutations(mapping[key]):
+                m[i] = perm
+                backtracking(m, i+1, results)
+
+    results = []
+    backtracking({}, 0, results)
+    return iter(results)
