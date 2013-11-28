@@ -1,7 +1,7 @@
 import re
 
 from battleground_state import BattlegroundState
-from turn_phase import TurnPhase
+from constants import Outcome, TurnPhase
 
 
 class GameState(object):
@@ -47,6 +47,9 @@ class GameState(object):
             return self.normalize() == other.normalize()
         return NotImplemented
 
+    def __hash__(self):
+        return hash(self.normalize())
+
     def __repr__(self):
         """Converts to a string of the following form:
             <life0>/<life1> (<active_player>/<phase>): <battleground_state>
@@ -82,6 +85,13 @@ class GameState(object):
         return game_state
 
     @property
+    def next_to_act(self):
+        if self.phase == TurnPhase.DeclareBlockers:
+            return self.defending_player
+        else:
+            return self.attacking_player
+
+    @property
     def attacking_player(self):
         return self.active_player
 
@@ -96,6 +106,27 @@ class GameState(object):
     @property
     def defending_player_creatures(self):
         return self.battleground.get_creatures(self.defending_player)
+
+    @property
+    def is_over(self):
+        return self.player_life[0] <= 0 or self.player_life[1] <= 0
+
+    @property
+    def outcome(self):
+        """Return the outcome of the current state (win, loss or draw).
+        Will raise an error if the game is not yet over.
+        """
+        if not self.is_over:
+            raise ValueError('The game is not over yet.')
+        # Very unlikely, but nice to cover this corner case as well.
+        if self.player_life[0] <= 0 and self.player_life[1] <= 0:
+            return Outcome.Draw
+        # Which player is dead?
+        dead = 0 if self.player_life[0] <= 0 else 1
+        if dead == self.next_to_act:
+            return Outcome.Loss
+        else:
+            return Outcome.Win
 
     def untap(self):
         """Untap for active player."""

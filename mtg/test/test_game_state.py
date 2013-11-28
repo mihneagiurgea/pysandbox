@@ -1,6 +1,7 @@
 import unittest2 as unittest
 
 from combat_assignment import CombatAssignment
+from constants import Outcome
 from game_state import GameState
 from factories import GameStateFactory
 
@@ -34,6 +35,35 @@ class TestGameState(unittest.TestCase):
             s = repr(game_state)
             self.assertEqual(repr(GameState.from_string(s)), s,
                              'Invalid deserialize & serialize transformation')
+
+    def test_hashable(self):
+        string = '20/20 (1/0): vs 1/2'
+        S = set()
+        S.add(GameState.from_string(string))
+        game_state = GameState.from_string(string)
+        self.assertIn(game_state, S)
+
+    def test_is_over(self):
+        game_state = GameState.from_string('20/20 (0/0):  vs ')
+        self.assertFalse(game_state.is_over)
+        with self.assertRaises(ValueError):
+            game_state.outcome
+
+        game_state = GameState.from_string('0/20 (0/0):  vs ')
+        self.assertTrue(game_state.is_over)
+        self.assertEqual(game_state.outcome, Outcome.Loss)
+
+        game_state = GameState.from_string('1/-2 (0/0):  vs ')
+        self.assertTrue(game_state.is_over)
+        self.assertEqual(game_state.outcome, Outcome.Win)
+
+        game_state = GameState.from_string('1/-2 (0/1):  vs ')
+        self.assertTrue(game_state.is_over)
+        self.assertEqual(game_state.outcome, Outcome.Loss)
+
+        game_state = GameState.from_string('0/0 (0/0):  vs ')
+        self.assertTrue(game_state.is_over)
+        self.assertEqual(game_state.outcome, Outcome.Draw)
 
     def test_untap(self):
         game_state = GameState.from_string('20/20 (0/0): 2/3 (T), 4/6 (T) vs ')
