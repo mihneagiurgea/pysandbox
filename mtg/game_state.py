@@ -31,7 +31,8 @@ class GameState(object):
         if battleground is None:
             battleground = BattlegroundState()
 
-        self.player_life = [20, 20]
+        self._life1 = 20
+        self._life2 = 20
         self.active_player = 0
         self.phase = TurnPhase.DeclareAttackers
         self.battleground = battleground
@@ -39,15 +40,15 @@ class GameState(object):
     def copy(self):
         """Create a deepcopy of this object."""
         result = GameState(self.battleground.copy())
-        result.player_life = self.player_life[:]
+        result._life1 = self._life1
+        result._life2 = self._life2
         result.active_player = self.active_player
         result.phase = self.phase
         return result
 
     def normalize(self):
         """Normalize this instance by converting it to something hashable."""
-        normalized = (self.player_life[0], self.player_life[1],
-                      self.active_player, self.phase)
+        normalized = (self._life1, self._life2, self.active_player, self.phase)
         return (normalized, self.battleground.normalize())
 
     def __eq__(self, other):
@@ -68,12 +69,12 @@ class GameState(object):
 
         WARNING - this is not as strong as the .normalize() method.
         """
-        return '%d/%d (%d/%d): %r' % (self.player_life[0], self.player_life[1],
+        return '%d/%d (%d/%d): %r' % (self._life1, self._life2,
                                       self.active_player, self.phase,
                                       self.battleground)
 
     _FROM_STRING_PATTERN = \
-        '(?P<player0_life>.+)/(?P<player1_life>.+) ' \
+        '(?P<life1>.+)/(?P<life2>.+) ' \
         '\((?P<active_player>\d)/(?P<phase>\d)\): (?P<battleground>.*)'
 
     @classmethod
@@ -84,8 +85,8 @@ class GameState(object):
         params = match.groupdict()
 
         game_state = GameState()
-        game_state.player_life[0] = int(params['player0_life'])
-        game_state.player_life[1] = int(params['player1_life'])
+        game_state._life1 = int(params['life1'])
+        game_state._life2 = int(params['life2'])
         game_state.active_player = int(params['active_player'])
         game_state.phase = int(params['phase'])
         game_state.battleground = \
@@ -117,7 +118,7 @@ class GameState(object):
 
     @property
     def is_over(self):
-        return self.player_life[0] <= 0 or self.player_life[1] <= 0
+        return self._life1 <= 0 or self._life2 <= 0
 
     @property
     def outcome(self):
@@ -127,10 +128,10 @@ class GameState(object):
         if not self.is_over:
             raise ValueError('The game is not over yet.')
         # Very unlikely, but nice to cover this corner case as well.
-        if self.player_life[0] <= 0 and self.player_life[1] <= 0:
+        if self._life1 <= 0 and self._life2 <= 0:
             return Outcome.Draw
         # Which player is dead?
-        dead = 0 if self.player_life[0] <= 0 else 1
+        dead = 0 if self._life1 <= 0 else 1
         if dead == self.next_to_act:
             return Outcome.Loss
         else:
@@ -231,7 +232,10 @@ class GameState(object):
     def _resolve_unblocked_attacker(self, attacker_uid):
         attacking_creature = self.battleground[attacker_uid]
         # Deal damage to defending player.
-        self.player_life[self.defending_player] -= attacking_creature.power
+        if self.defending_player == 0:
+            self._life1 -= attacking_creature.power
+        else:
+            self._life2 -= attacking_creature.power
         attacking_creature.remove_from_combat()
 
     def _resolve_blocked_attacker(self, attacker_uid, blocker_uids):
