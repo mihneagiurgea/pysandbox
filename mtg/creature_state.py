@@ -29,6 +29,14 @@ class CreatureState(object):
         # self.tapped = tapped
         # self.attacking = attacking
         # self.blocking = blocking
+
+    def copy(self):
+        """Create a shallow of this object (no need to deepcopy the
+        _creature_type reference)."""
+        result = CreatureState(self._creature_type, self.controlling_player)
+        result._state = self._state
+        return result
+
     ATTACKING_MASK = 1
     TAPPED_MASK = 1 << 1
     CONTROLLING_PLAYER_MASK = 1 << 2

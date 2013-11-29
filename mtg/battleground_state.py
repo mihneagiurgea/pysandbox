@@ -22,6 +22,14 @@ class BattlegroundState(object):
         self._uid_to_creature_state = {}
         self._next_uid = 1
 
+    def copy(self):
+        """Create a deepcopy of this object."""
+        result = BattlegroundState()
+        for key, value in self._uid_to_creature_state.items():
+            result._uid_to_creature_state[key] = value.copy()
+        result._next_uid = self._next_uid
+        return result
+
     def normalize(self):
         """Normalize this instance by converting it to something hashable."""
         tuples = []

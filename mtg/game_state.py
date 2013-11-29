@@ -36,6 +36,14 @@ class GameState(object):
         self.phase = TurnPhase.DeclareAttackers
         self.battleground = battleground
 
+    def copy(self):
+        """Create a deepcopy of this object."""
+        result = GameState(self.battleground.copy())
+        result.player_life = self.player_life[:]
+        result.active_player = self.active_player
+        result.phase = self.phase
+        return result
+
     def normalize(self):
         """Normalize this instance by converting it to something hashable."""
         normalized = (self.player_life[0], self.player_life[1],

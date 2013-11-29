@@ -1,5 +1,3 @@
-import copy
-
 from combat_assignment import CombatAssignment
 import combinatorics
 from turn_phase import TurnPhase
@@ -29,7 +27,7 @@ class BruteForceStrategy(object):
         subset_generator = \
             combinatorics.get_all_subsets(attacking_creature_uids)
         for attacker_uids in subset_generator:
-            next_state = copy.deepcopy(state)
+            next_state = state.copy()
             next_state.declare_attackers(attacker_uids)
             yield next_state
 
@@ -54,7 +52,7 @@ class BruteForceStrategy(object):
             for key in mapping.keys():
                 if mapping[key] == NO_BLOCK_UID:
                     del mapping[key]
-            next_state = copy.deepcopy(state)
+            next_state = state.copy()
             next_state.declare_blockers(mapping)
             yield next_state
 
@@ -64,6 +62,6 @@ class BruteForceStrategy(object):
             combinatorics.get_all_shuffled_mappings(unordered_combat_assignment)
         for mapping in mappings_generator:
             combat_assignment = CombatAssignment(mapping)
-            next_state = copy.deepcopy(state)
+            next_state = state.copy()
             next_state.resolve_combat(combat_assignment)
             yield next_state

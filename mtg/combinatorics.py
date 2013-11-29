@@ -1,4 +1,3 @@
-import copy
 from itertools import permutations
 
 
@@ -39,7 +38,7 @@ def get_all_shuffled_mappings(mapping):
 
     def backtracking(m, i, results):
         if i == len(keys):
-            results.append(copy.deepcopy(m))
+            results.append(m.copy())
         else:
             key = keys[i]
             for perm in permutations(mapping[key]):
