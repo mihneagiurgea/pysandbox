@@ -62,7 +62,7 @@ class Traversal(object):
 
     @classmethod
     def make_graph(cls, root, strategy):
-        """Compute the graph implied by some GameStatem."""
+        """Compute the graph implied by some GameState."""
         graph = DirectedGraph()
 
         queue = deque()
