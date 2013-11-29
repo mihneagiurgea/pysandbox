@@ -1,15 +1,16 @@
 import unittest
 
 from creature_state import CreatureState
-from factories import CreatureStateFactory
+from factories import CreatureTypeFactory, CreatureStateFactory
 
 class TestCreatureState(unittest.TestCase):
 
     SERIALIZATION_FIXTURES = ('1/1 (TA)', '1/1 (A)', '1/1 (B#5)', '2/3 (T)', '0/7')
 
     def test_equality(self):
-        cr1 = CreatureStateFactory()
-        cr2 = CreatureStateFactory(creature_type=cr1.creature_type,
+        creature_type = CreatureTypeFactory()
+        cr1 = CreatureStateFactory(creature_type=creature_type)
+        cr2 = CreatureStateFactory(creature_type=creature_type,
                                    controlling_player=cr1.controlling_player)
 
         self.assertEqual(cr1, cr2)
@@ -66,8 +67,7 @@ class TestCreatureState(unittest.TestCase):
     def test_creature_type_attributes(self):
         """Test that the CreatureType attributes (power, toughness, etc.) can
         be accessed from a CreatureState instance."""
-        creature_state = CreatureStateFactory()
-        self.assertEqual(creature_state.power,
-            creature_state.creature_type.power)
-        self.assertEqual(creature_state.toughness,
-            creature_state.creature_type.toughness)
+        creature_type = CreatureTypeFactory()
+        creature_state = CreatureStateFactory(creature_type=creature_type)
+        self.assertEqual(creature_state.power, creature_type.power)
+        self.assertEqual(creature_state.toughness, creature_type.toughness)

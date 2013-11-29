@@ -22,17 +22,67 @@ class CreatureState(object):
         if not isinstance(creature_type, CreatureType):
             raise ValueError('Invalid creature_type argument: %r' %
                              creature_type)
-        self.creature_type = creature_type
-        self.controlling_player = controlling_player
-        self.tapped = tapped
-        self.attacking = attacking
-        self.blocking = blocking
+        self._creature_type = creature_type
+        self._state = self._pack(blocking, controlling_player,
+                                  tapped, attacking)
+        # self.controlling_player = controlling_player
+        # self.tapped = tapped
+        # self.attacking = attacking
+        # self.blocking = blocking
+    ATTACKING_MASK = 1
+    TAPPED_MASK = 1 << 1
+    CONTROLLING_PLAYER_MASK = 1 << 2
+    BLOCKING_BIT_SHIFT = 3
+
+    def _pack(self, blocking, controlling_player, tapped, attacking):
+        return (blocking << 3 | controlling_player << 2 |
+                tapped << 1 | attacking)
+
+    @property
+    def blocking(self):
+        return self._state >> self.BLOCKING_BIT_SHIFT
+
+    @blocking.setter
+    def blocking(self, value):
+        self._state = (value << self.BLOCKING_BIT_SHIFT) | (self._state & 7)
+
+    @property
+    def controlling_player(self):
+        return 1 if self._state & self.CONTROLLING_PLAYER_MASK else 0
+
+    @controlling_player.setter
+    def controlling_player(self, value):
+        if value:
+            self._state |= self.CONTROLLING_PLAYER_MASK
+        else:
+            self._state &= ~self.CONTROLLING_PLAYER_MASK
+
+    @property
+    def tapped(self):
+        return 1 if self._state & self.TAPPED_MASK else 0
+
+    def tap(self):
+        self._state |= self.TAPPED_MASK
+
+    def untap(self):
+        self._state &= ~self.TAPPED_MASK
+
+    @property
+    def attacking(self):
+        return self._state & self.ATTACKING_MASK
+
+    @attacking.setter
+    def attacking(self, value):
+        if value:
+            self._state |= self.ATTACKING_MASK
+        else:
+            self._state &= ~self.ATTACKING_MASK
 
     def normalize(self):
         """Normalizes this instance by converting it to something hashable."""
-        state = (int(self.blocking) << 3 | self.controlling_player << 2 |
-                 int(self.tapped) << 1 | int(self.attacking))
-        return (self.creature_type.normalize(), state)
+        # state = (int(self.blocking) << 3 | self.controlling_player << 2 |
+                 # int(self.tapped) << 1 | self.attacking)
+        return (self._creature_type.normalize(), self._state)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -41,7 +91,7 @@ class CreatureState(object):
 
     def __repr__(self):
         """Convert to a string, but ignores controlling_player information."""
-        string = repr(self.creature_type)
+        string = repr(self._creature_type)
         state = ''
         if self.tapped:
             state += 'T'
@@ -70,16 +120,21 @@ class CreatureState(object):
         return CreatureState(creature_type, controlling_player,
             tapped=tapped, attacking=attacking, blocking=blocking)
 
-    def __getattr__(self, name):
-        """All CreatureType attributes should be accessible from a
-        CreatureState instance."""
-        return getattr(self.creature_type, name)
+    # CreatureType attributes
+    # Explicitly defining them is a lot faster than using __getattr__
+    @property
+    def power(self):
+        return self._creature_type.power
 
-    def tap(self):
-        self.tapped = True
+    @property
+    def toughness(self):
+        return self._creature_type.toughness
 
-    def untap(self):
-        self.tapped = False
+    # def tap(self):
+    #     self.tapped = True
+
+    # def untap(self):
+    #     self.tapped = False
 
     def attack(self):
         if self.tapped:
