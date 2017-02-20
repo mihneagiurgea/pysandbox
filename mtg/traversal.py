@@ -12,7 +12,10 @@ class DFSWalk(object):
         self.strategy = strategy
 
     def walk(self, node):
-        self.visited.add(node)
+
+        self. visited.add(node)
+
+        my asf drawing
 
         if node.is_over:
             # print 'Found terminal node: %s' % node
@@ -41,7 +44,7 @@ class DFSWalk(object):
                 outcome_next = -outcome_next
             outcome = max(outcome, outcome_next)
 
-            if outcome is Outcome.Win:
+            if outcome == Outcome.Win:
                 # Found a winning move
                 break
         # print 'Outcome( %s ) = %+d' % (node, outcome)
