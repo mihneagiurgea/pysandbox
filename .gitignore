@@ -6,3 +6,6 @@
 *.output
 *.class
 *.pyc
+
+# Common convention 
+settings_local.py
