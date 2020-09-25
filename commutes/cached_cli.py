@@ -43,7 +43,7 @@ class TrafficSummary(NamedTuple):
 
     def __repr__(self):
         routes_str = "\n\t\t".join(map(repr, list(self.routes.values())))
-        return "TrafficSummary(origin: %s -> destination: %s):\n\tdeparture_time: %s\n\troutes:\n\t\t%s" % (
+        return "TrafficSummary(origin: %s -> destination: %s):\n\tdeparture_time: %s\troutes:\n\t\t%s" % (
             self.origin,
             self.destination,
             self.departure_time.strftime("%c"),
