@@ -24,6 +24,35 @@ def summarize(results):
             )
 
 
+OFFICE_LOCATIONS = [
+    "Facebook, 181 Fremont St, San Francisco, CA 94105",
+    # Assuming Google is right next to Facebook
+    "Airbnb HQ, 888 Brannan St, San Francisco, CA 94103",
+    "333 Brannan St, San Francisco, CA 94107",
+]
+DEPARTURE_TIMES = [
+    "8:30",
+    "8:45",
+    "9:00",
+    "9:15",
+    "9:30",
+    "9:45",
+    "10:00",
+]
+
+
+def analyze_home(cli: CachedCli, origin: str):
+    # TODO - write traffic summary for a given location (origin):
+    # (1) for each destination in a short list of 3-4
+    # (2) commute to office and back
+    # (3) assuming 3-5 departure times, and staying 7-9h in the office
+    for destination in OFFICE_LOCATIONS:
+        for s in DEPARTURE_TIMES:
+            hour, minute = s.split(":")
+            departure_time = datetime.datetime(2020, 10, 1, int(hour), int(minute))
+            print(cli.traffic_summary(origin, destination, departure_time))
+
+
 cli = CachedCli()
 
 origin = "139 Marietta Dr, San Francisco, CA 94127"
@@ -42,38 +71,6 @@ results = cli.directions(
 )
 summarize(results)
 
-# results["pessimistic"] = gmaps.directions(
-#     origin,
-#     destination,
-#     mode="driving",
-#     alternatives=True,
-#     departure_time=departure_time,
-#     traffic_model="pessimistic",
-# )
+print(cli.traffic_summary(origin, destination, departure_time))
 
-
-# results["pessimistic"] = gmaps.directions(
-#     origin,
-#     destination,
-#     mode="driving",
-#     alternatives=True,
-#     departure_time=arrive_by,
-#     traffic_model="pessimistic",
-# )
-
-# gmaps = googlemaps.Client(key=API_KEY)
-
-# # Geocoding an address
-# geocode_result = gmaps.geocode("1600 Amphitheatre Parkway, Mountain View, CA")
-# print(geocode_result)
-
-# # Look up an address with reverse geocoding
-# reverse_geocode_result = gmaps.reverse_geocode((40.714224, -73.961452))
-# print(reverse_geocode_result)
-
-# # Request directions via public transit
-# now = datetime.now()
-# directions_result = gmaps.directions(
-#     "Sydney Town Hall", "Parramatta, NSW", mode="transit", departure_time=now
-# )
-# print(directions_result)
+analyze_home(cli, origin)

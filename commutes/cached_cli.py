@@ -14,23 +14,41 @@ class DirectionsRequest(NamedTuple):
     traffic_model: str
 
 
-class DurationInTraffic(NamedTuple):
-    best_guess: str
-    pessimistic: str
-    optimistic: str
-
-
-class RouteTraffic(NamedTuple):
+class RouteTraffic(object):
     summary: str
     distance: str
-    duration: DurationInTraffic
+    duration_pessimistic: str
+    duration_optimistic: str
+
+    def __init__(self, summary, distance):
+        self.summary = summary
+        self.distance = distance
+        self.duration_pessimistic = None
+        self.duration_optimistic = None
+
+    def __repr__(self):
+        return "[%s] Distance: %s Duration: %s - %s" % (
+            self.summary,
+            self.distance,
+            self.duration_optimistic,
+            self.duration_pessimistic,
+        )
 
 
 class TrafficSummary(NamedTuple):
     origin: str
     destination: str
     departure_time: datetime.datetime
-    routes: List[RouteTraffic]
+    routes: Dict[str, RouteTraffic]
+
+    def __repr__(self):
+        routes_str = "\n\t\t".join(map(repr, list(self.routes.values())))
+        return "TrafficSummary(origin: %s -> destination: %s):\n\tdeparture_time: %s\n\troutes:\n\t\t%s" % (
+            self.origin,
+            self.destination,
+            self.departure_time.strftime("%c"),
+            routes_str,
+        )
 
 
 class CachedCli(object):
@@ -41,9 +59,39 @@ class CachedCli(object):
     def traffic_summary(
         self, origin: str, destination: str, departure_time: datetime.datetime
     ) -> TrafficSummary:
-        # TODO - implement me based on summarize
+        routes = {}  # type: Dict[str, RouteTraffic]
         # https://developers.google.com/maps/documentation/directions/overview#Routes
-        pass
+        for traffic_model in ("optimistic", "pessimistic"):
+            results = self.directions(
+                origin=origin,
+                destination=destination,
+                departure_time=departure_time,
+                traffic_model=traffic_model,
+            )
+            for result in results:
+                summary = result["summary"]
+
+                legs = result["legs"]
+                assert len(legs) == 1
+                leg = legs[0]
+
+                distance = leg["distance"]["text"]
+                duration = leg["duration_in_traffic"]["text"]
+
+                # Add to routes
+                if summary not in routes:
+                    routes[summary] = RouteTraffic(summary=summary, distance=distance)
+                if traffic_model == "optimistic":
+                    routes[summary].duration_optimistic = duration
+                else:
+                    routes[summary].duration_pessimistic = duration
+
+        return TrafficSummary(
+            origin=origin,
+            destination=destination,
+            departure_time=departure_time,
+            routes=routes,
+        )
 
     def directions(
         self,
