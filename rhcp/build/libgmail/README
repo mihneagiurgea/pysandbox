@@ -1,0 +1,19 @@
+Run this:
+
+  python libgmail.py
+
+or this:
+
+  python demos/archive.py
+
+or even this:
+
+  python demos/sendmsg.py <account> <to address> <subject> <body>
+
+or perhaps this:
+
+  python demos/gmailsmtp.py # (Then connect to SMTP proxy on local port 8025)
+
+for hours of fun!(*)
+
+(*) Note: Fun may not last for hours. Use at your own risk, blah, blah, etc...
