@@ -29,13 +29,14 @@ def summarize(results):
 class HomeAnalyzer(object):
 
     OFFICE_LOCATIONS = [
+        # San Francisco
         "Facebook, 181 Fremont St, San Francisco, CA 94105",
-        # The other Facebook
-        "Facebook, 1 Hacker Way, Menlo Park, CA 94025",
         "Airbnb HQ, 888 Brannan St, San Francisco, CA 94103",
         "333 Brannan St, San Francisco, CA 94107",
+        # South Bay
+        "Facebook, 1 Hacker Way, Menlo Park, CA 94025",
     ]
-    DEPARTURE_TIMES = [
+    DEPARTURE_TIMES_MORNING = [
         "8:00",
         "8:15",
         "8:30",
@@ -45,22 +46,31 @@ class HomeAnalyzer(object):
         "9:30",
         "9:45",
         "10:00",
-        "10:15",
-        "10:30",
-        "10:45",
-        "11:00",
+    ]
+    DEPARTURE_TIMES_EVENING = [
+        "16:00",
+        "16:30",
+        "17:00",
+        "17:30",
+        "18:00",
+        "18:30",
+        "19:00",
+        "19:30",
+        "20:00",
     ]
 
     def __init__(self, cli: CachedCli):
         self.cli = cli
-        self.morning_times = []
-        self.evening_times = []
-        for s in HomeAnalyzer.DEPARTURE_TIMES:
-            hour, minute = s.split(":")
-            dt = datetime.datetime(2020, 10, 1, int(hour), int(minute))
-            self.morning_times.append(dt)
-            dt = dt + datetime.timedelta(hours=8)
-            self.evening_times.append(dt)
+        self.morning_times = [
+            self.convert(t) for t in HomeAnalyzer.DEPARTURE_TIMES_MORNING
+        ]
+        self.evening_times = [
+            self.convert(t) for t in HomeAnalyzer.DEPARTURE_TIMES_EVENING
+        ]
+
+    def convert(self, time: str) -> datetime.datetime:
+        hour, minute = time.split(":")
+        return datetime.datetime(2020, 10, 1, int(hour), int(minute))
 
     def analyze_home(self, origin: str):
         # TODO - write traffic summary for a given location (origin):
@@ -101,7 +111,9 @@ class HomeAnalyzer(object):
 cli = CachedCli()
 
 # origin = "139 Marietta Dr, San Francisco, CA 94127"
-origin = "66 Collins St, San Francisco, CA 94118"
+# origin = "66 Collins St, San Francisco, CA 94118"
+# origin = "1447 Funston Ave, San Francisco, CA"
+origin = "731 8th Ave, San Francisco, CA"
 
 # destination = "Facebook, 181 Fremont St, San Francisco, CA 94105"
 # departure_time = datetime.datetime(2020, 10, 1, 9, 45)
